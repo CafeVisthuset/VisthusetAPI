@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta lang="sv">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'docs/style.css' %}" />
+    <title>Välkommen till Café Visthusets API</title>
+  </head>
+  <body>
+    <h1>Välkommen till Café Visthusets API!</h1>
+    
+    <div class = "topiccontainer" id="Slideshow" style= "margin-top: 25px; align:center;">
+    	<h2 class = "topicheader">Vad vill du göra?</h3>
+    	  <div class = "topic">
+    		<img src="/static/docs/images/ingrid.jpg" class="topicimg"/>
+    		<p class="p"><a href="/admin/">Logga in!</a></p><br>
+    	  </div>
+    	  <div class = "topic">
+    		<img src="/static/docs/images/glass.jpg" class="topicimg" />
+      		<p class="p"><a href="/docs/">Kolla in vår dokumentation!</a></p>
+    	  </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+body {
+	background: white url("images/Background.png") no-repeat left top;
+	background-size: 1248px;
+	font-family: Optima, Geneva, sans-serif;
+}
+
+h1 {
+	color:blue;
+	font-size: 56px;
+	font-family: Optima, Geneva, sans-serif;
+	text-align: center;
+	
+}
+
+h3 {
+	font-size: 22px;
+	font-family: Optima, Geneva, sans-serif;
+	text-align: center;
+}
+
+p {
+	font-size: 15px;
+	font-family: Optima, Geneva, sans-serif;
+	text-align: center;
+}
+#slideshow div {
+	position: absolute;		
+}
+	.content{
+	size:100%;
+	margin-top:5%;
+	align:center;
+	border: 5px solid black;	
+	}
+	
+	.topiccontainer {
+	position: relative;
+	align:center;		
+		width: 75%;
+		margin: 1%;
+		padding: 1%;
+		z-index: 5;
+		border: 0px solid black;
+	}
+
+	.topic {
+	position: relative;
+	float:left;
+	align:center;
+	width: 350px;
+	height: 500px;
+	top: 15px;
+	margin: 2%;
+	margin-left: 10%;
+	background-color: white;
+	box-shadow:2px;
+	border-radius: 5 px solid black;
+	}
+	
+	.topicheader {
+	font-family: Optima, Geneva, sans-serif;
+	font-size: 42px;
+	text-align: center;
+	}
+	
+	.p {
+	position:relative;
+	font-family: Optima, Geneva, sans-serif;
+	font-size: 18px;
+	align: center;
+	}
+	
+	.topicimg{
+	position: relative;
+	width: 90%;
+	size: contain;
+	margin:5%;
+	margin-right:5%;
+	align-self: center;
+	border-radius: 2px;
+	}
+}
