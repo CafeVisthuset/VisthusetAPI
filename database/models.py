@@ -5,6 +5,9 @@ from django.db.models.deletion import CASCADE, PROTECT
 class Date(models.Model):
     date = models.DateField()
     time = models.TimeField()
+    
+    def __init__(self, auto_now=True):
+        return self.date, self.time
 
 class Employee(models.Model):
     id = models.IntegerField(
@@ -37,10 +40,10 @@ class Guest(models.Model):
     def __str__(self):
         return self.firstName, self.lastName, self.eMailAdress
     
-class Bikes(models.Model):
+class Bike(models.Model):
     id = models.IntegerField(primary_key = True)
     bikeKeyNo = models.IntegerField()
-    rentOutCount = models.IntegerField()
+    rentOutCount = models.IntegerField(default = 0)
         
 class CleanPoint(models.Model):
     id = models.IntegerField(primary_key = True)
@@ -54,12 +57,7 @@ class CleanPoint(models.Model):
         return self.pointType, self.description, self.cleanTask
 
 class CleanDay(models.Model):
-    id = models.IntegerField(primary_key=True)
-    
-    cleanDate_id = models.ForeignKey(
-        'Date',
-        on_delete=models.PROTECT
-        )
+    cleanDate_id = Date.date
     
     cleanPoint_id = models.ForeignKey(
         'CleanPoint',
@@ -75,10 +73,8 @@ class CleanDay(models.Model):
     completed = models.BooleanField(default = False)
     
 class Cashier(models.Model):
-    countingDay = models.ForeignKey(
-        'Date',
-         on_delete=models.PROTECT
-         )
+    countingDay = Date.date
+    
     cash = models.DecimalField(
         max_digits = 7, decimal_places = 2)
     
@@ -108,7 +104,7 @@ class Cashier(models.Model):
     
 class Damages(models.Model):
     bike_id = models.ForeignKey(
-        'Bikes',
+        'Bike',
         on_delete=models.PROTECT
         )
     
@@ -118,6 +114,8 @@ class Damages(models.Model):
         'Employee',
         on_delete=models.PROTECT
         )
+    def __str__(self):
+        return self.damageType
     
 class BikesBooking(models.Model):
     booking_id = models.IntegerField(primary_key=True)
@@ -132,7 +130,7 @@ class BikesBooking(models.Model):
         )
     
     bikes = models.ForeignKey(
-        'Bikes',
+        'Bike',
         on_delete=models.PROTECT
         )
     

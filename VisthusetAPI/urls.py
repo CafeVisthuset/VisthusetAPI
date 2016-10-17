@@ -19,7 +19,7 @@ from docs import views
 
 urlpatterns = [
     url(r'^$', views.LandingView.as_view(), name="landing"),
-    url(r'^database/', include('database.urls')),
+    url(r'^booking/', include('database.urls')),
     url(r'^docs/', include('docs.urls')),
     url(r'^admin/', admin.site.urls),
 ]
