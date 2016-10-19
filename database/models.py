@@ -1,10 +1,16 @@
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 from django.db.models.deletion import CASCADE, PROTECT
+import phonenumbers
 
 class Date(models.Model):
     date = models.DateField()
     time = models.TimeField()
+    BikesBooking = models.ForeignKey(
+        'BikesBooking',
+        on_delete= models.PROTECT,
+        default = 0
+        )
     
     def __init__(self, auto_now=True):
         return self.date, self.time
@@ -34,16 +40,18 @@ class Guest(models.Model):
     id = models.IntegerField(primary_key = True)
     firstName = models.CharField(max_length = 30)
     lastName = models.CharField(max_length = 30)
-    phoneNumber = models.IntegerField()
+    phoneNumber = models.CharField(max_length = 15)
     eMailAdress = models.EmailField()
-    
-    def __str__(self):
-        return self.firstName, self.lastName, self.eMailAdress
     
 class Bike(models.Model):
     id = models.IntegerField(primary_key = True)
     bikeKeyNo = models.IntegerField()
     rentOutCount = models.IntegerField(default = 0)
+    booking = models.ForeignKey(
+        'BikesBooking',
+        on_delete=models.PROTECT,
+        null = True
+        )
         
 class CleanPoint(models.Model):
     id = models.IntegerField(primary_key = True)
@@ -133,4 +141,5 @@ class BikesBooking(models.Model):
         'Bike',
         on_delete=models.PROTECT
         )
+    numberOfGuests = models.IntegerField(default = 0)
     
