@@ -1,16 +1,11 @@
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 from django.db.models.deletion import CASCADE, PROTECT
-import phonenumbers
+from django.template.defaultfilters import default
 
 class Date(models.Model):
     date = models.DateField()
     time = models.TimeField()
-    BikesBooking = models.ForeignKey(
-        'BikesBooking',
-        on_delete= models.PROTECT,
-        default = 0
-        )
     
     def __init__(self, auto_now=True):
         return self.date, self.time
@@ -43,14 +38,34 @@ class Guest(models.Model):
     phoneNumber = models.CharField(max_length = 15)
     eMailAdress = models.EmailField()
     
+class BikesBooking(models.Model):
+    booking_id = models.IntegerField(primary_key=True)
+    bookingDate = models.DateField('Date of booking')
+    '''bookingDate = models.ForeignKey(
+        'Date',
+        on_delete=models.PROTECT
+        )
+    
+    bookingGuest = models.ForeignKey(
+        'Guest',
+        on_delete=models.PROTECT
+        )
+    '''
+    bikes = models.ForeignKey(
+        'Bike',
+        on_delete=models.CASCADE,
+        default = 1
+        )
+    numberOfGuests = models.IntegerField(default = 2)
+    
 class Bike(models.Model):
     id = models.IntegerField(primary_key = True)
     bikeKeyNo = models.IntegerField()
     rentOutCount = models.IntegerField(default = 0)
     booking = models.ForeignKey(
-        'BikesBooking',
-        on_delete=models.PROTECT,
-        null = True
+        BikesBooking,
+        on_delete=models.CASCADE,
+        default = 0
         )
         
 class CleanPoint(models.Model):
@@ -125,21 +140,4 @@ class Damages(models.Model):
     def __str__(self):
         return self.damageType
     
-class BikesBooking(models.Model):
-    booking_id = models.IntegerField(primary_key=True)
-    bookingDate = models.ForeignKey(
-        'Date',
-        on_delete=models.PROTECT
-        )
-    
-    bookingGuest = models.ForeignKey(
-        'Guest',
-        on_delete=models.PROTECT
-        )
-    
-    bikes = models.ForeignKey(
-        'Bike',
-        on_delete=models.PROTECT
-        )
-    numberOfGuests = models.IntegerField(default = 0)
     

@@ -21,10 +21,10 @@ class BikesInLine(admin.TabularInline):
         
 # register bikes for users
 class BookingsAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (None,          {'fields': ['booking_id', 'bookingDate', 'bookingGuest']}),
+    '''fieldsets = [
+        (None,          {'fields': ['booking_id', 'bookingDate']}),
         ('Bikes',       {'fields': ['bikes'], 'classes' : ['collapse']}),
-        ]
+        ]'''
     
     inlines = [BikesInLine]
     
