@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<title>Visthusets EKP</title>
-	</head>
-	<body>
-		{% if latest_cleanday_list %}
-			<ul>
-			{% for day in latest_cleanday_list %}
-				<li><a href="{% url 'cleaning:detail' day.id %}">{{ day.signature }}</a></li>
-			{% endfor %}
-			</ul>
-		{% else %}
-			<p>No cleaning days have been made yet... </p>
-		{% endif %}
-	</body>
-</html>
+
+{% if latest_cleanday_list %}
+	<ul>
+		{% for day in latest_cleanday_list %}
+			<li><a href="{% url 'cleaning:detail' day.id %}">{{ day.signature }}</a></li>
+		{% endfor %}
+	</ul>
+	{% else %}
+	<p>No cleaning days have been made yet... </p>
+{% endif %}
+

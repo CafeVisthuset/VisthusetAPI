@@ -10,5 +10,5 @@ class IndexView(generic.TemplateView):
     template_name = 'docs/Index.html'
     
 class LandingView(generic.TemplateView):
-    template_name = 'landing.html'
+    template_name = 'index.html'
     

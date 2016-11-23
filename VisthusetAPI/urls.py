@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-from docs import views
+from VisthusetAPI.views import IndexView
 
 urlpatterns = [
-    url(r'^$', views.LandingView.as_view(), name="landing"),
+    url(r'^$', IndexView.as_view(), name="index"),
     url(r'^cleaning/', include('cleaning.urls')),
+    url(r'^cashflow/', include('Economy.urls')),
     url(r'^booking/', include('database.urls')),
     url(r'^docs/', include('docs.urls')),
     url(r'^admin/', admin.site.urls),
