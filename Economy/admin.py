@@ -1,8 +1,8 @@
 from django.contrib import admin
 from .models import Dagskassa
-from Economy.models import Employee
-from django.contrib.auth.models import User
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from Economy.models import Employee, WorkingHours
+from django.forms.models import modelformset_factory
+from Economy.forms import WorkHoursForm
 
 
 @admin.register(Dagskassa)    
@@ -14,43 +14,29 @@ class CashierAdmin(admin.ModelAdmin):
         ('Specificerad försäljning', {'fields': ['cafeSales', 'iceCreamSales',
                                       'foodShopSales', 'bikeSales', 'booksSales',
                                       'other12Sales', 'other25Sales']}),
-        ('Signering',                 {'fields': ['Signatur', 'comment']}),
+        ('Signering',                 {'fields': ['signature', 'comment']}),
         ]
     list_display = (
         'date','cafeSales', 'iceCreamSales', 'foodShopSales', 
-        'bikeSales', 'booksSales', 'other12Sales', 'other25Sales', 'Signatur',
+        'bikeSales', 'booksSales', 'other12Sales', 'other25Sales', 'signature',
         'comment')
     list_filter = ['date', 'signature']
     search_fields = ['date', 'signature']
     
-    def Signatur(self, obj):
-        return "%s %s" % (obj.signature.first_name, obj.signature.last_name)
-
-class UserInLine(admin.TabularInline):
-    model = Employee
-    can_delete = False
-
-       
-class UserAdmin(BaseUserAdmin):
-    fieldsets = [
-        ('Personuppgifter',          {'fields': ['user', 'person_number']}),
-        ('Löneuppgifter',   {'fields': ['wage', 'tax', 'drawTax']}),
-        ]
-    inlines = (UserInLine, )
-
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
-    
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('Personuppgifter',          {'fields': ['user', 'person_number']}),
+        ('Personuppgifter',          {'fields': ['user', 'first_name', 'last_name','person_number']}),
         ('Löneuppgifter',   {'fields': ['wage', 'tax', 'drawTax']}),
         ]
     
-    list_display = ['Förnamn', 'Efternamn', 'wage', 'hours_worked', 'drawTax']
-    def Förnamn(self, obj):
-        return obj.user.first_name
-    
-    def Efternamn(self, obj):
-        return obj.user.last_name
+    list_display = ['first_name', 'last_name', 'wage', 'hours_worked', 'drawTax']
+        
+@admin.register(WorkingHours)
+class WorkingHoursAdmin(admin.ModelAdmin):
+    form = WorkHoursForm
+    fieldsets = [
+        (None,      {'fields':['employee']}),
+        ('Datum',   {'fields':['date', 'startTime', 'endTime']}),
+        ]
+    list_display = ['employee', 'date', 'startTime', 'endTime', 'added']

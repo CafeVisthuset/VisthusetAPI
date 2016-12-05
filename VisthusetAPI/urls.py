@@ -20,7 +20,7 @@ from VisthusetAPI.views import IndexView
 urlpatterns = [
     url(r'^$', IndexView.as_view(), name="index"),
     url(r'^cleaning/', include('cleaning.urls')),
-    url(r'^cashflow/', include('Economy.urls')),
+    url(r'^economy/', include('Economy.urls')),
     url(r'^booking/', include('database.urls')),
     url(r'^docs/', include('docs.urls')),
     url(r'^admin/', admin.site.urls),

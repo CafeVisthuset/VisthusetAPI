@@ -6,8 +6,8 @@ Created on 12 nov. 2016
 from .models import Dagskassa
 from django.forms import ModelForm, Textarea
 from django import forms
-from Economy.models import Employee
-from django.forms.formsets import formset_factory
+from Economy.models import WorkingHours
+from django.forms.models import BaseModelFormSet
 
 """
     TODO:
@@ -16,11 +16,14 @@ from django.forms.formsets import formset_factory
     * skriv klart helper_texts
     * lägg till error_messages
 """
+class NameChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "%s %s" % (obj.first_name, obj.last_name)
+    
 class CashForm(ModelForm):
     """
     Formulär för att lägga in dagskassor
     """
-    
     class Meta:
         model = Dagskassa
         fields =['date', 'cash', 'card','cafeSales', 'iceCreamSales', 'foodShopSales', 
@@ -57,32 +60,47 @@ class CashForm(ModelForm):
             'signature' : 'denna måste fyllas i',
             }
 
-employed_set = Employee.objects.all()
-EMPLOYEE_CHOICES = []
-for employed in employed_set:
-    EMPLOYEE_CHOICES.append((employed.user.first_name, employed.get_full_name()))
-                
-Date_input = ['%H.%M, %d/%m', ]
-Time_Error ={
-        'required': 'Du måste fylla i starttid',
-        'invalid': 'Fyll i tid med rätt format',
-        }
+SpecDateFormat = ['%d/%m-%y', ]
+SpecTimeFormat = ['%H.%M', ]
 
-class hoursWorkedForm(forms.Form):
-    name = forms.ChoiceField(choices=EMPLOYEE_CHOICES, error_messages={
-        'required': 'Du måste fylla i namn',
-        })
-    startTime = forms.DateTimeField(input_formats=Date_input, error_messages=Time_Error)
-    endTime = forms.DateTimeField(input_formats=Date_input, error_messages=Time_Error)
+class WorkHoursForm(forms.ModelForm):
     
     class Meta:
-        labels ={'name': 'Namn',
+        model = WorkingHours
+        fields = ('employee', 'date', 'startTime', 'endTime')
+        labels ={'employee': 'Namn',
+                 'date': 'Datum',
                  'startTime': 'Började:',
                  'endTime': 'Slutade:',
-                 }
+                 } 
         help_texts ={
-            'name': 'vem jobbade arbetspasset?',
+            'employee': 'vem jobbade arbetspasset?',
             'startTime': 'När började arbetspasset? Ange i format hh.mm, dd/mm',
             'endTime': 'När slutade arbetspasset? Ange i format hh.mm, dd/mm'
             }
-    
+        error_messages={
+            'required': 'Du måste ange det här fältet!',
+            'invalid': 'Ange rätt format!'
+            }
+        
+class BaseWorkHours(BaseModelFormSet):    
+    def clean(self):
+        '''Checks so that there are no replicate working hours put in'''
+        super(WorkHoursForm, self).clean()
+        names = []
+        dates = []
+        startTimes = []
+        endTimes = []
+        for form in self.forms:
+            name = form.cleaned_data('name')
+            day = form.cleaned_data('date')
+            startTime = form.cleaned_data('startTime')
+            endTime = form.cleaned_data('endTime')
+            if startTime in startTimes and day in dates and name in names:
+                raise forms.ValidationError('Du håller på att lägga in dubbla pass för en anställd\
+                samma dag, det är inte tillåtet. Lägg in direkt i databasen om detta ändå är korrekt')
+            
+            names.append(name)
+            dates.append(day)
+            startTimes.append(startTime)
+            endTimes.append(endTime)

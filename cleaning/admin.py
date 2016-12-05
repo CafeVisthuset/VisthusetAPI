@@ -23,35 +23,42 @@ class FreezerAdmin(admin.ModelAdmin):
 @admin.register(FridgeTemp)
 class FridgeControl(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['unit']}),
-        ('Temperaturer',    {'fields': ['measured', 'anomaly']}),
+        (None,              {'fields': ['date', 'unit']}),
+        ('Temperaturer',    {'fields': ['measured']}),
         ('Rengöring',      {'fields': ['cleaned']}),
         ('Signering',       {'fields': ['signature']}),
         ]
-    list_display = ['date', 'Enhet', 'Signatur', 'anomaly']
+    list_display = ['date', 'unit', 'signature', 'anomaly']
     empty_value_display = 'Okänt'
     form = FridgeControlForm
     
-    def Signatur(self,obj):
-        return "%s %s" % (obj.signature.first_name, obj.signature.last_name)
-    
-    def Enhet(self, obj):
-        return "%s, %s" % (obj.unit.type, obj.unit.location)
+    def save_model(self, request, obj, FridgeControlForm, change):
+        higher = obj.measured > obj.prescribedMaxTempFridge
+        lower = obj.measured < obj.prescribedMinTempFridge
+        if higher or lower:
+            obj.anomaly = True
+            obj.save()
+        else:
+            obj.anomaly = False   
+            obj.save()
     
 @admin.register(FreezerTemp)
 class FreezerControl(admin.ModelAdmin):
     fieldsets = [
-        (None,              {'fields': ['unit']}),
-        ('Temperaturer',    {'fields': ['measured', 'anomaly']}),
+        (None,              {'fields': ['date', 'unit']}),
+        ('Temperaturer',    {'fields': ['measured']}),
         ('Rengöring',      {'fields': ['cleaned', 'defrosted'] }),
         ('Signering',       {'fields': ['signature']}),
         ]
     list_display = ['date', 'unit', 'signature', 'anomaly']
     form = FreezerControlForm
     
-    def Signatur(self,obj):
-        return "%s %s" % (obj.signature.first_name, obj.signature.last_name)
-    
-    def Enhet(self, obj):
-        return "%s, %s" % (obj.unit.type, obj.unit.location)
-    
+    def save_model(self, request, obj, FridgeControlForm, change):
+        higher = obj.measured > obj.prescribedMaxTempFreezer
+        lower = obj.measured < obj.prescribedMinTempFreezer
+        if higher or lower:
+            obj.anomaly = True
+            obj.save()
+        else:
+            obj.anomaly = False   
+            obj.save()

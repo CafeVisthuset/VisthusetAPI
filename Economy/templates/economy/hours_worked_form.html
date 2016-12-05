@@ -1,7 +1,20 @@
-<form action="cashflow/employee/" method="POST">
+<form action="" method="POST">
 	{% csrf_token %}
+	{{ formset.management_form }}
 	<table>
-		{{ form.as_table }}
+		<tbody>
+  			{% for form in formset %}
+  				<tr>
+  					{% for field in form %}
+  						<td>{{field.label_tag}}</td>
+  						<td>{{field}}</td>
+  						{% for error in field.errors %}
+  						<td><span>{{ error }}</span></td>
+  						{% endfor %}
+  					{% endfor %}
+  				</tr>
+			{% endfor %}
+		</tbody>
 	</table>
 	<input type="submit" value="Beräkna arbetade timmar">
 </form>

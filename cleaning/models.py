@@ -24,16 +24,18 @@ TODO:
 * Lägg in schema för personalen 
 """
 # Model to store info on Freezers
-
 class Freezer(models.Model):
     type = models.CharField(max_length = 50, verbose_name='Typ av frys')
     location = models.CharField(max_length = 255, verbose_name='Plats')
     active = models.BooleanField(default=True, verbose_name='Är den aktiv?')
     
+    def __str__(self):
+        return "%s, %s" % (self.type, self.location)
+    
     class Meta:
         verbose_name = 'Frys'
         verbose_name_plural = 'Frysar'
-        ordering = ['active']
+        ordering = ['-active']
 
 # Model to store info on fridges        
 class Fridge(models.Model):
@@ -41,14 +43,13 @@ class Fridge(models.Model):
     location = models.CharField(max_length = 255, verbose_name='Plats')
     active = models.BooleanField(default=True, verbose_name='Är den aktiv?')
     
-    def set_name(self):
-        name = ', '.join([self.fridge_type, self.location])
-        return name
+    def __str__(self):
+        return "%s, %s" % (self.type, self.location)
     
     class Meta:
         verbose_name = 'Kyl'
         verbose_name_plural = 'Kylar'
-        ordering = ['active']
+        ordering = ['-active']
 
 # Abstract model for holding info on temperatures
 class Temperature(models.Model):
@@ -72,7 +73,7 @@ class FridgeTemp(Temperature):
         on_delete=models.PROTECT,
         verbose_name = 'Enhet',
         to_field= 'id',
-        limit_choices_to={'active': True}
+        limit_choices_to={'is_active': True}
         )
     date = models.DateField(default=date.today, verbose_name='datum')
     signature = models.ForeignKey(
@@ -85,16 +86,6 @@ class FridgeTemp(Temperature):
         verbose_name_plural ='Kontrollpunkter kylskåp'
         ordering = ['date']
         
-    def is_anomaly(self):
-        higher = self.measured > self.prescribedMaxTempFridge
-        lower = self.measured < self.prescribedMinTempFridge
-        if higher or lower:
-            self.anomaly = True
-            return self.anomaly
-    is_anomaly.admin_order_field = 'date'
-    is_anomaly.boolean = True
-    is_anomaly.short_describtion = 'Är det en avvikelse?'
-        
 # Model to store temperatures for Freezers
 class FreezerTemp(Temperature):
     unit = models.ForeignKey(
@@ -106,18 +97,14 @@ class FreezerTemp(Temperature):
     date = models.DateField(default=date.today)
     signature = models.ForeignKey(
         Employee,
+        verbose_name= 'Signatur'
         )
+    
     class Meta:
         verbose_name = 'Kontrollpunkt frys'
         verbose_name_plural = 'Kontrollpunkter frysar'
-        ordering = ['date']
+        ordering = ['-date']
         
-    def is_anomaly(self):
-        higher = self.measured > self.prescribedMaxTempFreezer
-        lower = self.measured < self.prescribedMinTempFreezer
-        if higher or lower:
-            self.anomaly = True
-            return self.anomaly
 
 
 # Abstract model to store basic info on cleaning routines        

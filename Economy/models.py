@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import date
+from datetime import date, datetime
 from django.contrib.auth.models import User
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
@@ -19,11 +19,11 @@ class Employee(models.Model):
         blank = True,
         verbose_name='anställd'
         )
+    first_name = models.CharField(max_length=25, default=None, verbose_name='förnamn')
+    last_name = models.CharField(max_length=25, default=None, verbose_name='efternamn')
     person_number = models.IntegerField(null= True, verbose_name= 'Personnummer')
-#    phone_number = models.IntegerField()
-    
     wage = models.DecimalField(verbose_name= 'Lön',
-        max_digits=6, decimal_places=2, blank=True)
+        max_digits=6, decimal_places=2, null= True, blank=True)
     
     hours_worked = models.DecimalField(verbose_name='arbetade timmar',
         max_digits=6, decimal_places=2, default = 0)
@@ -37,25 +37,41 @@ class Employee(models.Model):
     
     ArbAvg = models.DecimalField(max_digits=3, decimal_places=2, default=0.25)
     
+    def __str__(self):
+        return "%s %s" % (self.first_name, self.last_name)
+    
     def get_full_name(self):
         return "%s %s" % (self.user.first_name, self.user.last_name)
     
-    def update_hours_worked(self):
-        pass
+    def update_hours_worked(self, hours):
+        self.hours_worked += hours
+        return self.hours_worked
+    
+    def reset_hours_worked(self):
+        self.hours_worked = 0
+        return self.hours_worked
     
     class Meta:
         verbose_name = 'anställd'
         verbose_name_plural = 'anställda'
-        
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Employee.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.employee.save()
+   
+class WorkingHours(models.Model):
+    employee = models.ForeignKey(
+        Employee,
+        null=True,
+        verbose_name='anställd'
+        )
+    date = models.DateField(verbose_name='datum')
+    startTime = models.TimeField(verbose_name='starttid')
+    endTime = models.TimeField(verbose_name='sluttid')
+    added = models.DateTimeField(default=datetime.now, verbose_name= 'Tillagd')
     
+    class Meta:
+        verbose_name='arbetstimme'
+        verbose_name_plural='arbetstimmar'
+        unique_together = ['employee', 'date']
+
+# Modell för att lägga in dagskassor
 class Dagskassa(models.Model):
     date = models.DateField(default= date.today, verbose_name='datum')
     
@@ -92,9 +108,8 @@ class Dagskassa(models.Model):
         )
     
     comment = models.CharField(max_length = 150, null=True, verbose_name='kommentar')
-    
     class Meta:
         verbose_name = 'dagskassa'
         verbose_name_plural = 'dagskassor'
         ordering = ('date', )
-        
+        unique_together = ['date', 'cash', 'card', 'signature']
