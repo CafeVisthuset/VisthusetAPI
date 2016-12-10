@@ -2,9 +2,12 @@ from django.db import models
 from Economy.models import Employee
 from .choices import *
 from .validators import validate_booking_date, validate_preliminary
-from datetime import date
+from datetime import date, timedelta, datetime
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.db import connection
+from builtins import int
+
 '''
 TODO:
 * Gör klart alla modeller för att kunna genomföra bokningar
@@ -55,6 +58,7 @@ class Guest(models.Model):
 '''    
 # Lunch models
 class Lunch(models.Model):
+    slug = models.SlugField(default='/')
     type = models.CharField(choices=Lunch_Choices, default='vegetarian', max_length= 15, verbose_name='lunchalternativ')
     price = models.PositiveIntegerField(default = 95, verbose_name='pris')
     #allergens
@@ -67,7 +71,14 @@ class Utilities(models.Model):
     class Meta:
         verbose_name= 'tillbehör'
         
-# Bike models
+'''
+Bike models
+
+Contain a model for bike availability(BikeAvailable) with manager (BikeAvailableManager)
+and model for bikes (Bike). It also contains a model for bike extras such as childseats.
+Additionally this section contains a model for damages on each bike (Damages).
+'''
+# Bike model
 class Bike(models.Model):
     number = models.PositiveIntegerField(null= True, verbose_name= 'Nummer')
     bikeKeyNo = models.CharField(max_length= 15, blank= True, verbose_name='Cykelnyckel')
@@ -88,6 +99,68 @@ class Bike(models.Model):
         verbose_name_plural = 'cyklar'
         ordering = ['-attribute', 'number']
         unique_together = ['number', 'attribute']
+
+# Availability manager
+def perdelta(start, end, delta):
+    curr = start
+    while curr <= end:
+        yield curr
+        curr += delta
+def find_index(lst, thing):
+    for sublist, bike_no in enumerate(lst):
+        try:           
+            bike_ind = bike_no.index(thing)
+        except ValueError:
+            continue
+        return sublist, bike_ind
+                    
+class BikeAvailableManager(models.Manager):
+    def get_available_bike(self):
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT  b.bike_id, b.start_date, b.end_date
+                FROM database_bike p, database_bikeavailable b
+                WHERE p.id = b.bike_id
+                ORDER BY b.bike_id
+                ''')
+            avail_list = []
+            for row in cursor.fetchall():
+                b = self.model(bike_id=row[0], start_date=row[1], end_date=row[2])
+                temp_date_list = [str(d) for d in perdelta(b.start_date, b.end_date, timedelta(days=1))]
+                avail_list.append([b.bike_id, temp_date_list])
+            
+            bike_list = []
+            available_dates_list = []
+            temp_dates = []
+            for item in avail_list:
+                bike = item[0]
+                    
+                if bike in bike_list:
+                    temp_dates = item[1]
+                    
+                    ind = find_index(available_dates_list, bike)
+                    
+                    for date in temp_dates:
+                        if date not in available_dates_list[ind[0]]:
+                            available_dates_list[ind[0]].append(date)
+                    bike_list.append(bike)
+                else:
+                    bike_list.append(bike)
+                    available_dates_list.append(item)
+                          
+            return available_dates_list
+        
+# Availability for bikes
+class BikeAvailable(models.Model):
+    bike = models.ForeignKey(
+        Bike,
+        on_delete=models.PROTECT,
+        null = True,
+        )
+    start_date = models.DateField(null=True)
+    end_date = models.DateField(null=True)
+    
+    objects = BikeAvailableManager()  # Extended manager for finding dates
         
 class BikeExtra(models.Model):
     name = models.CharField(max_length= 10, choices=Bike_Extra_Choices, verbose_name= 'cykeltillbehör')
@@ -131,9 +204,15 @@ class Damages(models.Model):
         verbose_name = 'skada'
         verbose_name_plural = 'skador'
         ordering = ['repaired', 'discoveredDate']
-        
+
+'''
+Models for accomodation
+
+Contains model for accomodation facility (Accomodation) and rooms associated with facility (Rooms)
+'''       
 #Accomodation models
 class Accomodation(models.Model):
+    slug = models.SlugField(default='/')
     name = models.CharField(max_length=30, verbose_name= 'boendeanläggning')
     classification = models.CharField(max_length=10, verbose_name= 'klass')
     telephone = models.CharField(max_length=15, verbose_name='telefon')

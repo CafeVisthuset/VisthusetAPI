@@ -9,4 +9,5 @@ from . import views
 app_name = 'docs'
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name = 'Index'),
+    url(r'^tutor/', views.tutor, name='Tutor'),
 ]

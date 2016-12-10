@@ -1,23 +1,14 @@
 from django.contrib import admin
-from .models import Bike, Booking
+from .models import Bike, Booking, BikeAvailable
 from database.models import Damages, Accomodation, Rooms
 from database.forms import BikesForm
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 
-# Guest table
-'''
-@admin.register(Guest)    
-class GuestAdmin(admin.ModelAdmin):
+@admin.register(BikeAvailable)
+class BikesAvail(admin.ModelAdmin):
+    fields = ['bike', 'start_date', 'end_date']
     
-    fieldsets = [
-        (None,          {'fields': [('firstName', 'lastName')]}),
-        ('Kontaktuppgifter', {'fields': ['phoneNumber', 'eMailAdress']})
-        ]
-    list_display = ('firstName', 'lastName', 'phoneNumber', 'eMailAdress')
-    
-    search_fields = ['firstName', 'lastName']
-'''
 # register bikes for users
 def reset_rent_out_count(self, obj):
     obj.rentOutCount = 0

@@ -69,7 +69,7 @@ class WorkingHours(models.Model):
     class Meta:
         verbose_name='arbetstimme'
         verbose_name_plural='arbetstimmar'
-        unique_together = ['employee', 'date']
+        unique_together = ['employee', 'date', 'added']
 
 # Modell för att lägga in dagskassor
 class Dagskassa(models.Model):

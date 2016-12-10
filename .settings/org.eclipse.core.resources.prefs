@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 encoding//Economy/migrations/0001_initial.py=utf-8
 encoding//Economy/migrations/0005_auto_20161121_1732.py=utf-8
+encoding//Economy/migrations/0009_auto_20161207_1158.py=utf-8
 encoding//cleaning/migrations/0001_initial.py=utf-8
 encoding//cleaning/migrations/0002_temperature.py=utf-8
 encoding//cleaning/migrations/0003_auto_20161112_2255.py=utf-8

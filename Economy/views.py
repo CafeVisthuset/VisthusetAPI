@@ -1,11 +1,14 @@
 from Economy.forms import CashForm, WorkHoursForm
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
-from Economy.models import WorkingHours, Employee
+from Economy.models import WorkingHours
 from django.views.generic.edit import CreateView
 from django.forms.models import modelformset_factory
 from django.views.generic.detail import DetailView
 from datetime import datetime
+from rest_framework import viewsets
+from django.contrib.auth.models import User
+from Economy.serializers import UserSerializer
 
 """
     TODO:
@@ -16,6 +19,13 @@ from datetime import datetime
     * Make sure no duplicates of the same form can be made.
     * Style the view
 """
+
+# ViewSets define the view behavior.
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    
+
 def ResultsView(request):
     return render(request, 'economy/results.html')
 

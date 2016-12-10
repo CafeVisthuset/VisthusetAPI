@@ -31,4 +31,4 @@ Room_Standard_Choices = [
     ('hostel', 'Vandrarhem'),
     ]
 
-Available_date_Choices = [()]
+Available_Date_Choices = [()]

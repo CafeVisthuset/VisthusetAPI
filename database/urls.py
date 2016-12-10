@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^$', views.index , name="index"),
     # /database/bookingNo/
     url(r'^(?P<booking_id>[0-9]+)/$', views.booking, name='booking'),
+    url(r'^test/', views.trial),
     ]
