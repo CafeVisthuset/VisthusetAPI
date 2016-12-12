@@ -27,11 +27,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='booking',
-            name='guest',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='gäst'),
-        ),
-        migrations.AlterField(
-            model_name='booking',
             name='startDate',
             field=models.DateField(blank=True, null=True, verbose_name='datum för avresa'),
         ),

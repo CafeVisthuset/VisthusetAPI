@@ -123,11 +123,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='booking',
-            name='guest',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='database.Guest', verbose_name='gäst'),
-        ),
-        migrations.AddField(
-            model_name='booking',
             name='longest_prel',
             field=models.DateTimeField(null=True, validators=[database.validators.validate_preliminary], verbose_name='längsta preliminärbokning'),
         ),

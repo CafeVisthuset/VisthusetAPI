@@ -1,9 +1,13 @@
 from django.contrib import admin
-from .models import Bike, Booking, BikeAvailable
-from database.models import Damages, Accomodation, Rooms
-from database.forms import BikesForm
+from .models import Bike, Booking, BikeAvailable, BikeBooking
+from database.models import Damages, Accomodation, Rooms, GuestUser,\
+    AccomodationBooking
+from Economy.models import Staff
+from database.forms import BikesForm, BikesBookingForm, AccomodationBookingForm
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
 
 @admin.register(BikeAvailable)
 class BikesAvail(admin.ModelAdmin):
@@ -57,13 +61,56 @@ class RoomsAdmin(admin.ModelAdmin):
         (None,          {'fields': ['describtion']}),
         ]
     list_display = ['name', 'owned_by', 'standard', 'max_guests', 'price']
+    
 #Allows editing of Bookings
+    
 @admin.register(Booking)
 class BookingsAdmin(admin.ModelAdmin):
     
     fieldsets = [
-        (None,          {'fields': ['booking_id', 'booking_date']}),
+        (None,          {'fields': ['type', 'booking', 'booking_date']}),
         ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']}),
         ('Specifikationer', {'fields': ['bikes', 'accomodation', 'utilities']})
         ]
+    list_display = ['booking', 'booking_date', 'type', 'guest', 'numberOfGuests']
+
+@admin.register(AccomodationBooking)    
+class AccomodationBookingAdmin(admin.ModelAdmin):
+    form_class = AccomodationBookingForm
     
+    fieldsets = [
+        (None,      {'fields': ['booking', 'booking_date']}),
+        ('Preliminär', {'classes': ['collapse'],
+                        'fields': ['preliminary', 'longest_prel']}),
+        ('Specifikationer', {'fields': ['startDate', 'endDate', 'accomodation']}),
+        ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']})
+        ]
+    list_display = ['booking', 'booking_date', 'guest', 'numberOfGuests']
+
+@admin.register(BikeBooking)   
+class BikeBookingAdmin(admin.ModelAdmin):
+    form = BikesBookingForm
+    
+    fieldsets = [
+        ('Preliminär', {'classes': ['collapse'],
+                        'fields': ['preliminary', 'longest_prel']}),
+        ('Specifikationer', {'fields': ['startDate', 'endDate', 'bikes']}),
+        ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']})
+        ]
+    
+    list_display = ['booking', 'booking_date', 'guest', 'numberOfGuests']
+    
+    class Meta:
+        pass
+    
+    
+class StaffAdmin(UserAdmin):
+    pass
+    
+class GuestAdmin(StaffAdmin):
+    pass
+
+
+admin.site.unregister(User)
+admin.site.register(Staff, StaffAdmin)
+admin.site.register(GuestUser, GuestAdmin)

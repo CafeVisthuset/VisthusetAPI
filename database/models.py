@@ -6,8 +6,7 @@ from datetime import date, timedelta, datetime
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.db import connection
-from builtins import int
-
+from django.db.models import Q
 '''
 TODO:
 * Gör klart alla modeller för att kunna genomföra bokningar
@@ -40,22 +39,33 @@ def validate_discount_code(value):
                 '''rabattkoden verkar inte finnas i vårt system, 
                 vänligen kontakta oss om problemet kvarstår'''
                 )
-        
-# Guest information
+
 '''
-class Guest(models.Model):
-    user = models.OneToOneField(
-        User,
-        limit_choices_to={'is_guests': True}
-        )
-    firstName = models.CharField(max_length = 25)
-    lastName = models.CharField(max_length = 25)
-    phoneNumber = models.CharField(max_length = 15)
-    eMailAdress = models.EmailField(max_length = 50)
+Proxy model for guests.
+'''
+class GuestManager(models.Manager):
     
-    def __str__(self):
-        return "%s %s" % (self.firstName, self.lastName)
-'''    
+    def get_queryset(self):
+        return super(GuestManager, self).get_queryset().exclude(
+            Q(is_staff=True) | Q(is_superuser=True))
+                     
+class GuestExtra(models.Model):
+    newsletter = models.BooleanField(default = True)
+    class Meta:
+        abstract = True
+        
+class GuestUser(User):
+    objects = GuestManager()
+    
+    class Meta:
+        proxy = True
+        app_label = 'auth'
+        verbose_name = 'gäst'
+        verbose_name_plural = 'gäster'
+    
+class Guest(GuestUser, GuestExtra):
+    pass
+     
 # Lunch models
 class Lunch(models.Model):
     slug = models.SlugField(default='/')
@@ -149,7 +159,22 @@ class BikeAvailableManager(models.Manager):
                     available_dates_list.append(item)
                           
             return available_dates_list
-        
+"""    
+    def find_first_avail_date(self):
+        with connection.cursor() as cursor:
+            cursor.execute('''
+            SELECT b.bike_id, b.start_date
+            FROM database_bikeavailable b, database_bike p
+            WHERE b.bike_id = p.id
+            ''')
+            
+            for row in cursor.fetchall():
+                b = self.model(bike_id=row[0], start_date=row[1])
+                lowest = b.start_date
+                if b.start_date <= lowest:
+                    lowest = b.start_date
+            return lowest
+"""        
 # Availability for bikes
 class BikeAvailable(models.Model):
     bike = models.ForeignKey(
@@ -161,6 +186,10 @@ class BikeAvailable(models.Model):
     end_date = models.DateField(null=True)
     
     objects = BikeAvailableManager()  # Extended manager for finding dates
+    
+    class Meta:
+        verbose_name = 'tillgänglighet cykel'
+        verbose_name_plural = 'tillgänglighet cyklar'
         
 class BikeExtra(models.Model):
     name = models.CharField(max_length= 10, choices=Bike_Extra_Choices, verbose_name= 'cykeltillbehör')
@@ -231,7 +260,7 @@ class Accomodation(models.Model):
     class Meta:
         verbose_name = 'boendeanläggning'
         verbose_name_plural = 'boendeanläggningar'
-        
+    
 class Rooms(models.Model):
     name = models.CharField(null=True, max_length=25, verbose_name='namn')
     standard = models.CharField(choices=Room_Standard_Choices, max_length=20, verbose_name='standard')
@@ -249,9 +278,77 @@ class Rooms(models.Model):
         return self.name
     class Meta:
         verbose_name = 'rum'
+        verbose_name_plural = 'rum'
         ordering = ['owned_by']
 
+class RoomsAvailableManager(models.Manager):
+    def get_available_bike(self):
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT  a.room_id, a.start_date, a.end_date.
+                FROM database_rooms r, database_roomsavailable a
+                WHERE r.id = a.room_id
+                ORDER BY a.room_id
+                ''')
+            avail_list = []
+            for row in cursor.fetchall():
+                a = self.model(room_id=row[0], start_date=row[1], end_date=row[2])
+                temp_date_list = [str(d) for d in perdelta(a.start_date, a.end_date, timedelta(days=1))]
+                avail_list.append([a.room_id, temp_date_list])
+            
+            room_list = []
+            available_dates_list = []
+            temp_dates = []
+            for item in avail_list:
+                room = item[0]
+                    
+                if room in room_list:
+                    temp_dates = item[1]
+                    
+                    ind = find_index(available_dates_list, room)
+                    
+                    for date in temp_dates:
+                        if date not in available_dates_list[ind[0]]:
+                            available_dates_list[ind[0]].append(date)
+                    room_list.append(room)
+                else:
+                    room_list.append(room)
+                    available_dates_list.append(item)
+                          
+            return available_dates_list
+
+class RoomsAvailable(models.Model):
+    room = models.ForeignKey(
+        Rooms,
+        on_delete=models.PROTECT,
+        null = True
+        )
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    objects = RoomsAvailableManager()
+
 # Booking models
+def calc_booking_no():
+    today = datetime.today()
+    day_form = '%y%m%d'
+    day_part = today.strftime(day_form)
+    latest_booking = Booking.objects.latest('booking')
+    bookingstr = str(latest_booking.booking)
+    last_part = int(bookingstr[-2:])
+    booking_no = ''
+    if bookingstr[:6] == day_part:
+        last_part += 1
+        if last_part <= 9:
+            last_part = '0' + str(last_part)
+        else:
+            last_part = str(last_part)
+        booking_no = day_part + str(last_part)
+        return int(booking_no)
+    else:
+        booking_no = day_part + '01'
+        return int(booking_no)
+    
 class Discount_codes(models.Model):
     code = models.CharField(max_length=15, verbose_name= 'kod')
     guest = models.ForeignKey(
@@ -260,14 +357,23 @@ class Discount_codes(models.Model):
         verbose_name = 'gäst',
         null = True
         )
+
+class BookingQuerySet(models.QuerySet):
+    def accomodation(self):
+        return self.filter(type='A')
     
+    def bike(self):
+        return self.filter(type='B')
+
 class Booking(models.Model):
-    booking_id = models.PositiveIntegerField(primary_key=True, verbose_name='boknings id')
+    type = models.CharField(choices= Booking_choices, max_length= 25, default= 'B',
+                            verbose_name='bokningstyp')
+    booking = models.PositiveIntegerField(primary_key=True, verbose_name='boknings id', default=calc_booking_no)
     booking_date = models.DateField(default=date.today, verbose_name='bokningsdatum', validators=
                                     [])
     preliminary = models.BooleanField(default= False, verbose_name='preliminär')
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
-                                        validators= [validate_preliminary])
+                                        validators= [validate_preliminary], blank=True)
     payed = models.BooleanField(default= False, verbose_name='betald')
     startDate = models.DateField(verbose_name='datum för avresa', blank=True, null=True, validators=
                                  [])
@@ -276,19 +382,21 @@ class Booking(models.Model):
     discount_code = models.CharField(blank=True, null=True, max_length=15, verbose_name= 'rabattkod',
                                      validators = [validate_discount_code])
     numberOfGuests = models.IntegerField(null= False, default = 2, verbose_name='antal gäster')
-    guest = models.OneToOneField(
-        User,
-        limit_choices_to={'is_guests': True},
-        on_delete=models.CASCADE,
+    checked_in = models.BooleanField(default=False, verbose_name='incheckad (J/N)')
+    checked_out = models.BooleanField(default=False, verbose_name='utcheckad(J/N)')
+    
+    other = models.TextField(max_length = 255, blank= True, verbose_name= 'övrigt')
+    guest = models.ForeignKey(
+        GuestUser,
         verbose_name='gäst',
         blank=True,
         null= True,
         )
+    
     bikes = models.ManyToManyField(
         Bike,
         verbose_name='cyklar',
         blank=True,
-#        limit_choices_to= Q(Booking.objects.filter(booking__bikes = '') and )
         )
     
     bike_extras = models.ManyToManyField(
@@ -306,12 +414,48 @@ class Booking(models.Model):
         verbose_name='tillbehör',
         blank=True
         )
-    other = models.TextField(max_length = 255, blank= True, verbose_name= 'övrigt')
     
     def __str__(self):
-        return u'[{0}] 0{1}'.format(self.booking_date, self.booking_id)
+        return str(self.booking)
     
     class Meta:
         verbose_name = 'Bokning'
         verbose_name_plural = 'bokningar'
-        ordering = ['booking_date']
+        ordering = ['-booking_date']
+
+class AccomodationBookingManager(models.Manager):
+    
+    def get_queryset(self):
+        return super(AccomodationBookingManager, self).get_queryset().filter(type='A')
+
+    def create(self, *args, **kwargs):
+        kwargs.update({'type': 'A'})
+        return super(AccomodationBookingManager, self).create(*args, **kwargs)
+
+class AccomodationBooking(Booking):
+    objects = AccomodationBookingManager()
+    
+    class Meta:
+        proxy = True
+        verbose_name = 'boendebokning'
+        verbose_name_plural = 'bokningar boende'
+        
+    def save(self, *args, **kwargs):
+        self.type = 'A'
+        super(AccomodationBooking, self).save(*args, **kwargs)
+        
+class BikeBookingManager(models.Manager):   
+    
+    def get_queryset(self):
+        return super(BikeBookingManager, self).get_queryset().filter(type='B')
+    
+    def create(self, *args, **kwargs):
+        kwargs.update({'type': 'B'})
+        return super(BikeBookingManager, self).create(*args, **kwargs)
+    
+class BikeBooking(Booking):
+    ojects = BikeBookingManager()
+    class Meta:
+        proxy = True
+        verbose_name= 'cykelbokning'
+        verbose_name_plural= 'cykelbokningar'

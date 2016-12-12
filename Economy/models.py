@@ -3,6 +3,7 @@ from datetime import date, datetime
 from django.contrib.auth.models import User
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
+from django.db.models import Q
 '''
 TODO:
 * Gör det möjligt att räkna ut lön, skatt och antal arbetade timmar för varje anställd
@@ -11,6 +12,21 @@ TODO:
     - Uppdaterar automatiskt hours_worked
 
 '''
+class StaffManager(models.Manager):
+    
+    def get_queryset(self):
+        return super(StaffManager, self).get_queryset().filter(
+            Q(is_staff=True) | Q(is_superuser=True))
+        
+class Staff(User):
+    objects = StaffManager()
+    class Meta:
+        proxy = True
+        app_label = 'auth'
+        verbose_name = 'anställd'
+        verbose_name_plural = 'anställda'
+    
+
 class Employee(models.Model):
     user = models.OneToOneField(
         User,

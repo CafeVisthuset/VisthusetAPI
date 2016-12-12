@@ -1,27 +1,47 @@
 from django.shortcuts import render
-from django.http.response import HttpResponse
-from .models import BikeAvailable
-
-# Create your views here.
-from .models import Booking
-from datetime import timedelta
+from django.http.response import HttpResponse, HttpResponseRedirect
+from .models import BikeAvailable, Booking
+from calendar import calendar, HTMLCalendar
+from django.views.generic.edit import CreateView
+from database.forms import BikesBookingForm, AccomodationBookingForm
+from datetime import datetime
+from database.models import BikeBooking
 
 def index(request):
     latest_booking_list = Booking.objects.order_by('-BookingDate')[:5]
     output = ', '.join([q.guest for q in latest_booking_list])
     return HttpResponse(output)
 
-def booking(request, booking_id):
-    response = "You're looking at booking %s."
-    return HttpResponse(response % booking_id)
+def ThanksView(request):
+    return HttpResponse('Tack för din bokning!')
 
+def booking(request, booking):
+    response = "You're looking at booking %s."
+    return HttpResponse(response % booking)
+
+class AccomodationBookingView(CreateView):
+    form_class = AccomodationBookingForm
+    template_name = './bookings/booking.html'
+
+def BikeBookingView(request):    
+    if request.method == 'POST':
+        form = BikesBookingForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/booking/thanks/')
+    else:
+        form = BikesBookingForm()
+    return render(request, 'bookings/booking.html', {'form': form})
+
+    
 def perdelta(start, end, delta):
     curr = start
     while curr <= end:
         yield curr
         curr += delta
-        
+    
 def trial(request):
-    bike_list = BikeAvailable.objects.get_available_bike()  
-    output = ', '.join([str(list) for list in bike_list])
+    today = datetime.today()
+    
+    output = today.strftime(format)
     return HttpResponse(output)

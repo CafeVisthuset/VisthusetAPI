@@ -31,4 +31,10 @@ Room_Standard_Choices = [
     ('hostel', 'Vandrarhem'),
     ]
 
-Available_Date_Choices = [()]
+Booking_choices = [
+    ('B', 'Cykel'),
+    ('A', 'Boende'),
+    ('L', 'Lunch'),
+    ('P', 'Paket'),
+    ('E', 'Event')
+    ]
