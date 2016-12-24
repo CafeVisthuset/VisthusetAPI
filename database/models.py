@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.db import connection
 from django.db.models import Q
+from django.db.models.fields import related
 '''
 TODO:
 * Gör klart alla modeller för att kunna genomföra bokningar
@@ -99,7 +100,6 @@ class Bike(models.Model):
                                  verbose_name='vuxen/barn', null=True)
     extra = models.CharField(choices=Bike_Extra_Choices, max_length= 15,
                              verbose_name='Knuten till tillbehör', blank=True)
-    
     
     def __str__(self):
         return "%scykel %s" % (self.attribute, self.number)
@@ -268,14 +268,16 @@ class Rooms(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2, default=0, 
                                 verbose_name="pris exkl. moms")
     describtion = models.TextField(max_length=255, blank=True, verbose_name='Beskrivning')
-    owned_by =models.ForeignKey(
+    owned_by = models.ForeignKey(
         Accomodation,
+        related_name= 'rooms',
         verbose_name='anläggning',
         null= True
         )
     
     def __str__(self):
         return self.name
+    
     class Meta:
         verbose_name = 'rum'
         verbose_name_plural = 'rum'
@@ -369,15 +371,15 @@ class Booking(models.Model):
     type = models.CharField(choices= Booking_choices, max_length= 25, default= 'B',
                             verbose_name='bokningstyp')
     booking = models.PositiveIntegerField(primary_key=True, verbose_name='boknings id', default=calc_booking_no)
-    booking_date = models.DateField(default=date.today, verbose_name='bokningsdatum', validators=
+    booking_date = models.DateField(default=datetime.today, verbose_name='bokningsdatum', validators=
                                     [])
     preliminary = models.BooleanField(default= False, verbose_name='preliminär')
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
                                         validators= [validate_preliminary], blank=True)
     payed = models.BooleanField(default= False, verbose_name='betald')
-    startDate = models.DateField(verbose_name='datum för avresa', blank=True, null=True, validators=
+    startDate = models.DateField(verbose_name='datum för avresa', null=True, validators=
                                  [])
-    endDate = models.DateField(verbose_name='datum för hemresa', blank=True, null=True, validators=
+    endDate = models.DateField(verbose_name='datum för hemresa', null=True, validators=
                                [])
     discount_code = models.CharField(blank=True, null=True, max_length=15, verbose_name= 'rabattkod',
                                      validators = [validate_discount_code])
@@ -395,6 +397,7 @@ class Booking(models.Model):
     
     bikes = models.ManyToManyField(
         Bike,
+        related_name='bikes',
         verbose_name='cyklar',
         blank=True,
         )
@@ -406,11 +409,13 @@ class Booking(models.Model):
         )
     accomodation = models.ManyToManyField(
         Accomodation,
+        related_name='accomodation',
         verbose_name='boende',
         blank=True,
         )
     utilities = models.ManyToManyField(
         Utilities,
+        related_name='utilities',
         verbose_name='tillbehör',
         blank=True
         )

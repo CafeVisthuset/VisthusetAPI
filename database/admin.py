@@ -42,7 +42,8 @@ class DamagesAdmin(admin.ModelAdmin):
 @admin.register(Accomodation)
 class AccomodationAdmin(admin.ModelAdmin):
     # form = AccomodationForm
-    list_display = ['name', 'email', 'telephone','website', 'adress_report']
+    fields = ['name', 'email', 'telephone', 'website']
+    list_display = ['name', 'email', 'telephone','website', 'adress_report', ]
     readonly_fields = ('adress_report', )
     
     def adress_report(self, instance):
