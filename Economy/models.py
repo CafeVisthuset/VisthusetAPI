@@ -25,7 +25,6 @@ class Staff(User):
         app_label = 'auth'
         verbose_name = 'anställd'
         verbose_name_plural = 'anställda'
-    
 
 class Employee(models.Model):
     user = models.OneToOneField(

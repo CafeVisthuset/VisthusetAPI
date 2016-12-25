@@ -69,24 +69,24 @@ class RoomsAdmin(admin.ModelAdmin):
 class BookingsAdmin(admin.ModelAdmin):
     
     fieldsets = [
-        (None,          {'fields': ['type', 'booking', 'booking_date']}),
+        (None,          {'fields': ['type', 'booking', 'created_at']}),
         ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']}),
         ('Specifikationer', {'fields': ['bikes', 'accomodation', 'utilities']})
         ]
-    list_display = ['booking', 'booking_date', 'type', 'guest', 'numberOfGuests']
-
+    list_display = ['booking', 'created_at', 'type', 'guest', 'numberOfGuests']
+    
 @admin.register(AccomodationBooking)    
 class AccomodationBookingAdmin(admin.ModelAdmin):
     form_class = AccomodationBookingForm
     
     fieldsets = [
-        (None,      {'fields': ['booking', 'booking_date']}),
+        (None,      {'fields': ['booking', 'created_at']}),
         ('Preliminär', {'classes': ['collapse'],
                         'fields': ['preliminary', 'longest_prel']}),
         ('Specifikationer', {'fields': ['startDate', 'endDate', 'accomodation']}),
         ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']})
         ]
-    list_display = ['booking', 'booking_date', 'guest', 'numberOfGuests']
+    list_display = ['booking', 'created_at', 'guest', 'numberOfGuests']
 
 @admin.register(BikeBooking)   
 class BikeBookingAdmin(admin.ModelAdmin):
@@ -99,7 +99,7 @@ class BikeBookingAdmin(admin.ModelAdmin):
         ('Info om gästen', {'fields': ['guest', 'numberOfGuests', 'discount_code']})
         ]
     
-    list_display = ['booking', 'booking_date', 'guest', 'numberOfGuests']
+    list_display = ['booking', 'created_at', 'guest', 'numberOfGuests']
     
     class Meta:
         pass

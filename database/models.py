@@ -371,15 +371,13 @@ class Booking(models.Model):
     type = models.CharField(choices= Booking_choices, max_length= 25, default= 'B',
                             verbose_name='bokningstyp')
     booking = models.PositiveIntegerField(primary_key=True, verbose_name='boknings id', default=calc_booking_no)
-    booking_date = models.DateField(default=datetime.today, verbose_name='bokningsdatum', validators=
-                                    [])
     preliminary = models.BooleanField(default= False, verbose_name='preliminär')
     longest_prel = models.DateTimeField(verbose_name='längsta preliminärbokning', null=True,
                                         validators= [validate_preliminary], blank=True)
     payed = models.BooleanField(default= False, verbose_name='betald')
-    startDate = models.DateField(verbose_name='datum för avresa', null=True, validators=
+    start_date = models.DateField(verbose_name='datum för avresa', null=True, validators=
                                  [])
-    endDate = models.DateField(verbose_name='datum för hemresa', null=True, validators=
+    end_date = models.DateField(verbose_name='datum för hemresa', null=True, validators=
                                [])
     discount_code = models.CharField(blank=True, null=True, max_length=15, verbose_name= 'rabattkod',
                                      validators = [validate_discount_code])
@@ -388,6 +386,10 @@ class Booking(models.Model):
     checked_out = models.BooleanField(default=False, verbose_name='utcheckad(J/N)')
     
     other = models.TextField(max_length = 255, blank= True, verbose_name= 'övrigt')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now= True)
+    
     guest = models.ForeignKey(
         GuestUser,
         verbose_name='gäst',
@@ -426,7 +428,7 @@ class Booking(models.Model):
     class Meta:
         verbose_name = 'Bokning'
         verbose_name_plural = 'bokningar'
-        ordering = ['-booking_date']
+        ordering = ['-created_at']
 
 class AccomodationBookingManager(models.Manager):
     
@@ -459,7 +461,8 @@ class BikeBookingManager(models.Manager):
         return super(BikeBookingManager, self).create(*args, **kwargs)
     
 class BikeBooking(Booking):
-    ojects = BikeBookingManager()
+    objects = BikeBookingManager()
+    
     class Meta:
         proxy = True
         verbose_name= 'cykelbokning'
