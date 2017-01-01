@@ -3,9 +3,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect
 from .models import BikeAvailable, Booking
 from calendar import calendar, HTMLCalendar
 from django.views.generic.edit import CreateView
-from database.forms import BikesBookingForm, AccomodationBookingForm
 from datetime import datetime
-from database.models import BikeBooking
 
 def index(request):
     latest_booking_list = Booking.objects.order_by('-BookingDate')[:5]
@@ -19,6 +17,7 @@ def booking(request, booking):
     response = "You're looking at booking %s."
     return HttpResponse(response % booking)
 
+'''
 class AccomodationBookingView(CreateView):
     form_class = AccomodationBookingForm
     template_name = './bookings/booking.html'
@@ -33,7 +32,7 @@ def BikeBookingView(request):
         form = BikesBookingForm()
     return render(request, 'bookings/booking.html', {'form': form})
 
-    
+'''    
 def perdelta(start, end, delta):
     curr = start
     while curr <= end:

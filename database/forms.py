@@ -4,8 +4,10 @@ Created on 9 nov. 2016
 @author: Adrian
 '''
 from django import forms
-from .models import Booking
-from database.models import BikeExtra, BikeBooking, Bike, AccomodationBooking
+from .models import Booking, Lunch
+from database.models import BikeExtra, Bike, LunchBooking, BikesBooking
+from .choices import Lunch_Choices
+from django.forms.formsets import BaseFormSet
 
 '''
 TODO:
@@ -16,30 +18,26 @@ class BikesForm(forms.ModelForm):
     
     class Meta:
         model = Bike
-        fields = []
+        fields = ['number', 'bikeKeyNo', 'wheelsize', 'attribute', 'extra']
         
 class BikeExtraForm(forms.ModelForm):
     class Meta:
         model = BikeExtra
         fields = ['name', 'number']
+
+class BikeBookingForm(forms.ModelForm):
+    class Meta:
+        model = BikesBooking
+        fields = ['subtotal']
         
-class BikesBookingForm(forms.ModelForm):
-    startDate = forms.DateField(widget=forms.SelectDateWidget)
-    endDate = forms.DateField(widget=forms.SelectDateWidget)
+        
+class LunchBookingForm(forms.ModelForm):
+    type = forms.ChoiceField(choices=Lunch_Choices)
     
     class Meta:
-        model = BikeBooking
-        fields = ['numberOfGuests']
-        
-class AccomodationBookingForm(forms.ModelForm):
-    startDate = forms.DateField(widget=forms.SelectDateWidget)
-    endDate = forms.DateField(widget=forms.SelectDateWidget)
-    class Meta:
-        model = AccomodationBooking
-        fields = ['numberOfGuests', 'other']
-              
-class Bookingform(forms.ModelForm):
-    class Meta:
-        model = Booking
-        fields = ['booking', ]
+        model = LunchBooking
+        fields = ['type', 'quantity', 'subtotal']
+        help_texts = {'quantity': 'Hur många av den givna lunchen?'}
+        label = {'quantity': 'kvantitet', 'subtotal': 'delsumma',
+                 'type': 'Lunchtyp'}
         

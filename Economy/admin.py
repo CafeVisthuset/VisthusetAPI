@@ -26,7 +26,7 @@ class CashierAdmin(admin.ModelAdmin):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('Personuppgifter',          {'fields': ['user', 'first_name', 'last_name','person_number']}),
+        ('Personuppgifter',          {'fields': ['username', 'password', 'email', 'first_name', 'last_name','person_number']}),
         ('Löneuppgifter',   {'fields': ['wage', 'tax', 'drawTax']}),
         ]
     

@@ -38,3 +38,8 @@ Booking_choices = [
     ('P', 'Paket'),
     ('E', 'Event')
     ]
+
+Brand_choices = [
+    ('LB', 'LunchBots'),
+    ('CC', 'Clean Canteen'),
+    ]

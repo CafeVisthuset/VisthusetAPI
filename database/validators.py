@@ -18,4 +18,4 @@ def validate_preliminary(self):
         raise ValidationError(
             'Detta är ingen preliminärbokning'
             )
-            
+
