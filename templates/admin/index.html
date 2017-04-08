@@ -10,10 +10,17 @@
 {% block breadcrumbs %}{% endblock %}
 
 {% block content %}
-<div id="content-main">
-	<h3>Under denna rubrik hamnar länkar till alla formulär personalen kan använda</h3>
-	 <a href="/economy/cashflow/">Lägg in dagskassor</a><br>
+
 {% if app_list %}
+	<div class="app-database module">
+		<table>
+		<caption>
+			<a href="/booking/availablebike/">Tillgänglighet cyklar</a>
+		</caption>
+		<th scope="row"><a href="/booking/availablebike/">Lägg till tillgänglighet för cyklar</a></th>
+		<th scope="row"><a href=""></a></th>
+		</table>
+	</div>
     {% for app in app_list %}
         <div class="app-{{ app.app_label }} module">
         <table>

@@ -1,12 +1,19 @@
+from functools import update_wrapper
+
 from django.contrib import admin
 from .models import Bike, Booking, BikeAvailable, BikesBooking, LunchBooking
-from database.models import Damages, Facility, Rooms, Guest, RoomsBooking, Lunch
+from database.models import Damages, Facility, Rooms, Guest, RoomsBooking, Lunch,\
+    Event, BikeExtraBooking
 from Economy.models import Staff
-from database.forms import BikesForm, LunchBookingForm
+from database.forms import BikesForm, LunchBookingForm, CreateAvailableBikeForm,\
+    BaseCreateAvailableBikeFormset, BikeBookingForm, AutomaticBikeBookingForm
 from django.utils.html import format_html_join
 from django.utils.safestring import mark_safe
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.conf.urls import url
+from django.forms.formsets import formset_factory
+from django.shortcuts import render
 
 
 # register bikes for users
@@ -51,10 +58,12 @@ class DamagesAdmin(admin.ModelAdmin):
 
 @admin.register(BikeAvailable)
 class BikesAvail(admin.ModelAdmin):
-    fields = ['bike', 'available_date', 'available']
-
-
-
+    list_display = ['bike', 'available_date', 'available', 'bookings']
+    
+@admin.register(BikeExtraBooking)
+class BikeExtraBooking(admin.ModelAdmin):
+    fields = ['to_date', 'from_date']
+    
 '''
 Admins for rooms and facilities
 '''
@@ -123,6 +132,10 @@ TODO:
 
 '''    
 # Inlines
+class GuestInLine(admin.TabularInline):
+    model = Guest
+    fields = ['username', 'password', 'first_name', 'last_name']
+    
 class RoomsBookingInLine(admin.TabularInline):
     model = RoomsBooking
     extra = 1
@@ -131,41 +144,73 @@ class RoomsBookingInLine(admin.TabularInline):
     
 class BikesBookingInLine(admin.TabularInline):
     model = BikesBooking
+    form = BikeBookingForm
     extra = 1
-    
+    #fields = ['quantity', 'from_date', 'duration']
+'''    
+class BikesExtraBookingInline(admin.TabularInline):
+    model = BikeExtraBooking
+    extra = 0
+    fields = ['extra', 'from_date', 'to_date', 'subtotal']
+    readonly_fields = ['subtotal']
+'''    
+
 class LunchBookingInLine(admin.TabularInline):
     model = LunchBooking
     extra = 1
-    fields = ['quantity', 'type', 'day', 'subtotal']
+    form = LunchBookingForm
     readonly_fields = ['subtotal']
-    
+
     
 @admin.register(Booking)
 class BookingsAdmin(admin.ModelAdmin):
+    form_class = AutomaticBikeBookingForm
     
     fieldsets = [
-        (None,          {'fields': ['guest', 'booking', 'created_at', 'updated_at']}),
+        (None,          {'fields': ['guest_for_booking', 'booking', 'created_at', 'updated_at']}),
         ('Info om gästen', {'fields': ['numberOfGuests', 'discount_code']}),
-        ('Specifikationer', {'fields': ['total', 'booked_item_report']}),
+        ('Specifikationer', {'fields': ['total', 'booked_bike_report', 'booked_room_report',
+                                        'booked_lunch_report']}),
+        #('Automatisk cykelbokning',     {'fields': ['quantity']})
         ]
-    list_display = ['booking', 'guest', 'total', 'created_at', 'updated_at','numberOfGuests']
-    readonly_fields = ['created_at', 'updated_at', 'booked_item_report', 'total']
+    list_display = ['booking', 'guest_for_booking', 'total', 'created_at', 'updated_at','numberOfGuests']
+    readonly_fields = ['created_at', 'updated_at', 'booked_bike_report', 'booked_room_report',
+                       'booked_lunch_report', 'total']
     
     inlines = [BikesBookingInLine, RoomsBookingInLine, LunchBookingInLine]
-    def booked_item_report(self, instance):
+    
+    def booked_bike_report(self, instance):
         return format_html_join(mark_safe('<br/>'),
                                 '{}',
-                                ((line, ) for line in instance.booked_item.all()
-                                ) or mark_safe("<span class='errors'>Det finns inga objekt registrerade hos denna bokning</span>")
+                                ((line, ) for line in instance.booked_bike.all()
+                                ) or mark_safe("<span class='errors'>Det finns inga cykelbokningar registrerade hos denna bokning</span>")
                                 )
-    booked_item_report.short_description = 'Enheter för denna bokning'
+    booked_bike_report.short_description = 'Cyklar för denna bokning'
+    
+    def booked_room_report(self, instance):
+        return format_html_join(mark_safe('<br/>'),
+                                'Rum: {}, Antal personer: {}, Incheckning: {}, Utcheckning: {}',
+                                ((str(room.room), str(room.numberOfGuests), str(room.from_date), str(room.to_date), ) for room in instance.booked_rooms.all()
+                                ) or mark_safe("<span class='errors'>Det finns inga rumsbokningar registrerade hos denna bokning</span>")
+                                )
+    booked_room_report.short_description = 'Rum för denna bokning'
+    
+    def booked_lunch_report(self, instance):
+        return format_html_join(mark_safe('<br/>'),
+                                'Typ: {}, Antal: {}, Dag:{}',
+                                ((str(lunch.type), str(lunch.quantity), str(lunch.day),  ) for lunch in instance.booked_lunches.all()
+                                ) or mark_safe("<span class='errors'>Det finns inga luncher bokade i denna bokning</span>")
+                                )
+    booked_lunch_report.short_description = 'Luncher för denna bokning'
+    
     
 @admin.register(BikesBooking)
 class BikesBookingAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (None,         {'fields': ['booking', ]}),
-        ('Pris',        {'fields': ['subtotal']}),
-        ]
+    form_class = BikeBookingForm
+    #fieldsets = [
+    #    (None,         {'fields': ['booking', ]}),
+    #    ('Pris',        {'fields': ['subtotal']}),
+    #    ]
     
     def available_bikes(self, instance):
         # Gör funktion som hämtar alla lediga cyklar
@@ -184,9 +229,13 @@ class RoomsBookingAdmin(admin.ModelAdmin):
     
 @admin.register(LunchBooking)
 class LunchBooking(admin.ModelAdmin):
-    form = LunchBookingForm
+    form_class = LunchBookingForm
     #fields = ['quantity', 'subtotal']
     
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['title', 'date_and_time']
 
 
 '''
@@ -195,9 +244,9 @@ Staff and guest admins. Belongs to auth app.
 class StaffAdmin(UserAdmin):
     pass
     
+
 class GuestAdmin(StaffAdmin):
     pass
-
 
 admin.site.unregister(User)
 admin.site.register(Staff, StaffAdmin)

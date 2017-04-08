@@ -19,3 +19,8 @@ def validate_preliminary(self):
             'Detta är ingen preliminärbokning'
             )
 
+def positive_integer(self):
+    if self < 0:
+        raise ValidationError(
+            'Fältet får inte vara mindre än 0'
+            )
